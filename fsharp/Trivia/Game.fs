@@ -171,7 +171,10 @@ module GameRunner =
         aGame.add("Pat") |> ignore;
         aGame.add("Sue") |> ignore;
 
-        let rand = new Random();
+        let rand = 
+            match Array.toList argv with
+            | seed::tail -> new Random(int seed)
+            | _ -> new Random()
 
         while isFirstRound || notAWinner do
             isFirstRound <- false; 
