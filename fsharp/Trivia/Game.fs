@@ -2,4 +2,5 @@
 
 type Player = {
     Name: string
+    Position: int
 }
