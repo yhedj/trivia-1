@@ -1,6 +1,7 @@
 ﻿
 namespace UglyTrivia
 
+open Trivia;
 open System;
 open System.Collections.Generic;
 open System.Linq;
@@ -8,7 +9,7 @@ open System.Text;
 
 type Game() as this =
 
-    let players = List<string>()
+    let players = List<Player>()
 
     let places = Array.create 6 0
     let purses = Array.create 6 0
@@ -37,7 +38,7 @@ type Game() as this =
         this.howManyPlayers() >= 2
 
     member this.add(playerName: String): bool =
-        players.Add(playerName);
+        players.Add({ Name = playerName });
         places.[this.howManyPlayers()] <- 0;
         purses.[this.howManyPlayers()] <- 0;
         inPenaltyBox.[this.howManyPlayers()] <- false;
@@ -50,32 +51,32 @@ type Game() as this =
         players.Count;
 
     member this.roll(roll: int) =
-        Console.WriteLine(players.[currentPlayer] + " is the current player");
+        Console.WriteLine(players.[currentPlayer].Name + " is the current player");
         Console.WriteLine("They have rolled a " + roll.ToString());
 
         if inPenaltyBox.[currentPlayer] then
             if roll % 2 <> 0 then
                 isGettingOutOfPenaltyBox <- true;
 
-                Console.WriteLine(players.[currentPlayer].ToString() + " is getting out of the penalty box");
+                Console.WriteLine(players.[currentPlayer].Name + " is getting out of the penalty box");
                 places.[currentPlayer] <- places.[currentPlayer] + roll;
                 if places.[currentPlayer] > 11 then places.[currentPlayer] <- places.[currentPlayer] - 12;
 
-                Console.WriteLine(players.[currentPlayer]
+                Console.WriteLine(players.[currentPlayer].Name
                                     + "'s new location is "
                                     + places.[currentPlayer].ToString());
                 Console.WriteLine("The category is " + this.currentCategory());
                 this.askQuestion();
                
             else
-                Console.WriteLine(players.[currentPlayer].ToString() + " is not getting out of the penalty box");
+                Console.WriteLine(players.[currentPlayer].Name + " is not getting out of the penalty box");
                 isGettingOutOfPenaltyBox <- false;
 
         else
             places.[currentPlayer] <- places.[currentPlayer] + roll;
             if places.[currentPlayer] > 11 then places.[currentPlayer] <- places.[currentPlayer] - 12;
 
-            Console.WriteLine(players.[currentPlayer]
+            Console.WriteLine(players.[currentPlayer].Name
                                 + "'s new location is "
                                 + places.[currentPlayer].ToString());
             Console.WriteLine("The category is " + this.currentCategory());
@@ -117,7 +118,7 @@ type Game() as this =
             if isGettingOutOfPenaltyBox then
                 Console.WriteLine("Answer was correct!!!!");
                 purses.[currentPlayer] <- purses.[currentPlayer] + 1;
-                Console.WriteLine(players.[currentPlayer]
+                Console.WriteLine(players.[currentPlayer].Name
                                     + " now has "
                                     + purses.[currentPlayer].ToString()
                                     + " Gold Coins.");
@@ -135,7 +136,7 @@ type Game() as this =
 
             Console.WriteLine("Answer was corrent!!!!");
             purses.[currentPlayer] <- purses.[currentPlayer] + 1;
-            Console.WriteLine(players.[currentPlayer]
+            Console.WriteLine(players.[currentPlayer].Name
                                 + " now has "
                                 + purses.[currentPlayer].ToString()
                                 + " Gold Coins.");
@@ -148,7 +149,7 @@ type Game() as this =
 
     member this.wrongAnswer(): bool=
         Console.WriteLine("Question was incorrectly answered");
-        Console.WriteLine(players.[currentPlayer] + " was sent to the penalty box");
+        Console.WriteLine(players.[currentPlayer].Name + " was sent to the penalty box");
         inPenaltyBox.[currentPlayer] <- true;
 
         currentPlayer <- currentPlayer + 1;
@@ -167,47 +168,25 @@ module GameRunner =
     let main argv = 
         let mutable isFirstRound = true;
         let mutable notAWinner = false;
-        //let aGame = Game();
+        let aGame = Game();
 
-        //aGame.add("Chet") |> ignore;
-        //aGame.add("Pat") |> ignore;
-        //aGame.add("Sue") |> ignore;
-
-        let chet = OutOfPenaltyBox { Name = "Chet"; Position = 0; Purses = 0 }
-        let pat = OutOfPenaltyBox { Name = "Pat"; Position = 0; Purses = 0 }
-        let sue = OutOfPenaltyBox { Name = "Sue"; Position = 0; Purses = 0 }
-        let generateQuestions category = [1..50] |> List.map (fun i -> sprintf "%s Questions %i" category i)
-        let game = { 
-            Players = [chet; pat; sue]
-            Categories = [ 
-                { Name = "Pop"; Position = 0; Questions = generateQuestions "Pop" }
-                { Name = "Science"; Position = 1; Questions = generateQuestions "Science" }
-                { Name = "Sports"; Position = 2; Questions = generateQuestions "Sports" }
-                { Name = "Rock"; Position = 3; Questions = generateQuestions "Rock" } ]
-        }
-
+        aGame.add("Chet") |> ignore;
+        aGame.add("Pat") |> ignore;
+        aGame.add("Sue") |> ignore;
+        
         let rand = 
             match Array.toList argv with
             | seed::tail -> new Random(int seed)
             | _ -> new Random()
 
-        let mutable currentPlayer = game.Players.Item 0
-        let mutable currentGame = { game with Players = (Seq.skip 1 game.Players |> Seq.toList) }
         while isFirstRound || notAWinner do
             isFirstRound <- false; 
             let randomRoll = rand.Next(5) + 1
-            //aGame.roll(randomRoll);
-            let tempPlayer, tempGame = roll randomRoll currentGame currentPlayer
-
-            if (rand.Next(9) = 7) then
-                currentPlayer <- (tempPlayer |> didNotAnswerCorrectly)
-                //notAWinner <- aGame.wrongAnswer();
-            else
-                currentPlayer <- (tempPlayer |> answerCorrectly)
-                //notAWinner <- aGame.wasCorrectlyAnswered();
+            aGame.roll(randomRoll);
             
-            notAWinner <- match currentPlayer with Winner _ -> false | _ -> true
-            let nextPlayer, nextGame = nextPlayer tempGame currentPlayer
-            currentPlayer <- nextPlayer
-            currentGame <- nextGame
+            if (rand.Next(9) = 7) then
+                notAWinner <- aGame.wrongAnswer();
+            else
+                notAWinner <- aGame.wasCorrectlyAnswered();
+            
         0
