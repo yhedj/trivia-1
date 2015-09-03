@@ -4,4 +4,5 @@ type Player = {
     Name: string
     Position: int
     Purses: int
+    InPenaltyBox: bool
 }
