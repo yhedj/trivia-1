@@ -9,6 +9,7 @@ open System.Text;
 
 type Game() as this =
 
+    let mutable state = NotStarted
     let players = List<Player>()
     
     let popQuestions = LinkedList<string>()
@@ -16,7 +17,6 @@ type Game() as this =
     let sportsQuestions = LinkedList<string>()
     let rockQuestions = LinkedList<string>()
 
-    let mutable currentPlayer = 0;
     let mutable isGettingOutOfPenaltyBox = false;
 
     do
@@ -24,11 +24,14 @@ type Game() as this =
             popQuestions.AddLast("Pop Question " + i.ToString()) |> ignore
             scienceQuestions.AddLast("Science Question " + i.ToString()) |> ignore
             sportsQuestions.AddLast("Sports Question " + i.ToString()) |> ignore
-            rockQuestions.AddLast(this.createRockQuestion(i)) |> ignore
+            rockQuestions.AddLast("Rock Question " + i.ToString()) |> ignore
     
-    member this.createRockQuestion(index: int): string =
-        "Rock Question " + index.ToString()
-
+    let nextPlayer currentTurn =
+        match Seq.toList currentTurn.NextPlayers with
+        | nextPlayer::tail -> 
+            state <- Playing { CurrentPlayer = nextPlayer; NextPlayers = Seq.concat [tail;[currentTurn.CurrentPlayer]] }
+        | [] -> failwith "Are you really playing alone ?!"
+    
     member this.isPlayable(): bool =
         this.howManyPlayers() >= 2
 
@@ -43,106 +46,113 @@ type Game() as this =
         players.Count;
 
     member this.roll(roll: int) =
-        Console.WriteLine(players.[currentPlayer].Name + " is the current player");
-        Console.WriteLine("They have rolled a " + roll.ToString());
+        let moveAndAskQuestion player =
+            let player = { player with Position = (player.Position + roll) % 12 };
 
-        if players.[currentPlayer].InPenaltyBox then
-            if roll % 2 <> 0 then
-                isGettingOutOfPenaltyBox <- true;
-
-                Console.WriteLine(players.[currentPlayer].Name + " is getting out of the penalty box");
-                players.[currentPlayer] <- { players.[currentPlayer] with Position = (players.[currentPlayer].Position + roll) % 12 };
-
-                Console.WriteLine(players.[currentPlayer].Name
-                                    + "'s new location is "
-                                    + players.[currentPlayer].Position.ToString());
-                Console.WriteLine("The category is " + this.currentCategory());
-                this.askQuestion();
-               
-            else
-                Console.WriteLine(players.[currentPlayer].Name + " is not getting out of the penalty box");
-                isGettingOutOfPenaltyBox <- false;
-
-        else
-            players.[currentPlayer] <- { players.[currentPlayer] with Position = (players.[currentPlayer].Position + roll) % 12 };
-
-            Console.WriteLine(players.[currentPlayer].Name
+            Console.WriteLine(player.Name
                                 + "'s new location is "
-                                + players.[currentPlayer].Position.ToString());
-            Console.WriteLine("The category is " + this.currentCategory());
-            this.askQuestion();
+                                + player.Position.ToString());
+            Console.WriteLine("The category is " + this.currentCategory(player.Position));
+            this.askQuestion(player.Position);
+            player
+        let rollFunc player =
+            Console.WriteLine(player.Name + " is the current player");
+            Console.WriteLine("They have rolled a " + roll.ToString());
 
-    member private this.askQuestion() =
-        if this.currentCategory() = "Pop" then
+            if player.InPenaltyBox then
+                if roll % 2 <> 0 then
+                    isGettingOutOfPenaltyBox <- true;
+
+                    Console.WriteLine(player.Name + " is getting out of the penalty box");
+                    moveAndAskQuestion player
+                else
+                    Console.WriteLine(player.Name + " is not getting out of the penalty box");
+                    isGettingOutOfPenaltyBox <- false;
+                    player
+            else
+                moveAndAskQuestion player
+        match state with
+        | NotStarted -> 
+            state <- Playing { CurrentPlayer = players.Item(0) ; NextPlayers = Seq.skip 1 players }
+            this.roll(roll)
+        | Playing currentTurn -> 
+            state <- Playing { currentTurn with CurrentPlayer = rollFunc currentTurn.CurrentPlayer }
+
+    member private this.askQuestion(position: int) =
+        if this.currentCategory(position) = "Pop" then
             Console.WriteLine(popQuestions.First.Value);
             popQuestions.RemoveFirst();
             
-        if this.currentCategory() = "Science" then
+        if this.currentCategory(position) = "Science" then
             Console.WriteLine(scienceQuestions.First.Value);
             scienceQuestions.RemoveFirst();
         
-        if this.currentCategory() = "Sports" then
+        if this.currentCategory(position) = "Sports" then
             Console.WriteLine(sportsQuestions.First.Value);
             sportsQuestions.RemoveFirst();
 
-        if this.currentCategory() = "Rock" then
+        if this.currentCategory(position) = "Rock" then
             Console.WriteLine(rockQuestions.First.Value);
             rockQuestions.RemoveFirst();
 
 
-    member private this.currentCategory(): String =
+    member private this.currentCategory(position: int): String =
 
-        if (players.[currentPlayer].Position % 4 = 0) then "Pop";
-        elif (players.[currentPlayer].Position % 4 = 1) then "Science";
-        elif (players.[currentPlayer].Position % 4 = 2) then "Sports";
+        if (position % 4 = 0) then "Pop";
+        elif (position % 4 = 1) then "Science";
+        elif (position % 4 = 2) then "Sports";
         else "Rock"
 
     member this.wasCorrectlyAnswered(): bool =
-        if players.[currentPlayer].InPenaltyBox then
-            if isGettingOutOfPenaltyBox then
-                Console.WriteLine("Answer was correct!!!!");
-                players.[currentPlayer] <- { players.[currentPlayer] with Purses = players.[currentPlayer].Purses + 1 };
-                Console.WriteLine(players.[currentPlayer].Name
-                                    + " now has "
-                                    + players.[currentPlayer].Purses.ToString()
-                                    + " Gold Coins.");
+        let addOnePurse currentTurn =
+            let currentPlayer = { currentTurn.CurrentPlayer with Purses = currentTurn.CurrentPlayer.Purses + 1 }
+            let currentTurn = { currentTurn with CurrentPlayer = currentPlayer }
+            state <- Playing currentTurn
+            Console.WriteLine(currentPlayer.Name
+                                + " now has "
+                                + currentPlayer.Purses.ToString()
+                                + " Gold Coins.");
+            currentTurn
+                    
+        match state with
+        | NotStarted -> failwith "Impossible"
+        | Playing currentTurn ->
+            if currentTurn.CurrentPlayer.InPenaltyBox then
+                if isGettingOutOfPenaltyBox then
+                    Console.WriteLine("Answer was correct!!!!");
+                    let currentTurn = addOnePurse currentTurn
 
-                let winner = this.didPlayerWin();
-                currentPlayer <- currentPlayer + 1;
-                if currentPlayer = players.Count then currentPlayer <- 0;
+                    let winner = this.didPlayerWin(currentTurn);
+                    nextPlayer currentTurn
+
+                    winner;
+                else
+                    nextPlayer currentTurn
+                    true;
+            else
+                Console.WriteLine("Answer was corrent!!!!");
+                let currentTurn = addOnePurse currentTurn
+
+                let winner = this.didPlayerWin(currentTurn);
+                nextPlayer currentTurn
                 
                 winner;
-            else
-                currentPlayer <- currentPlayer + 1;
-                if currentPlayer = players.Count then currentPlayer <- 0;
-                true;
-        else
-
-            Console.WriteLine("Answer was corrent!!!!");
-            players.[currentPlayer] <- { players.[currentPlayer] with Purses = players.[currentPlayer].Purses + 1 };
-            Console.WriteLine(players.[currentPlayer].Name
-                                + " now has "
-                                + players.[currentPlayer].Purses.ToString()
-                                + " Gold Coins.");
-
-            let winner = this.didPlayerWin();
-            currentPlayer <- currentPlayer + 1;
-            if (currentPlayer = players.Count) then currentPlayer <- 0;
-
-            winner;
 
     member this.wrongAnswer(): bool=
-        Console.WriteLine("Question was incorrectly answered");
-        Console.WriteLine(players.[currentPlayer].Name + " was sent to the penalty box");
-        players.[currentPlayer] <- { players.[currentPlayer] with InPenaltyBox = true };
+        match state with
+            | NotStarted -> failwith "Impossible"
+            | Playing currentTurn ->
+                Console.WriteLine("Question was incorrectly answered");
+                Console.WriteLine(currentTurn.CurrentPlayer.Name + " was sent to the penalty box");
+                let currentTurn = { currentTurn with CurrentPlayer = { currentTurn.CurrentPlayer with InPenaltyBox = true } }
+                state <- Playing currentTurn;
 
-        currentPlayer <- currentPlayer + 1;
-        if (currentPlayer = players.Count) then currentPlayer <- 0;
-        true;
+                nextPlayer currentTurn
+                true;
 
 
-    member private this.didPlayerWin(): bool =
-        not (players.[currentPlayer].Purses = 6);
+    member private this.didPlayerWin(currentTurn: CurrentTurn): bool =
+        not (currentTurn.CurrentPlayer.Purses = 6);
 
 module GameRunner = 
     
