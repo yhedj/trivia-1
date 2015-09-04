@@ -26,12 +26,6 @@ type Game() as this =
             sportsQuestions.AddLast("Sports Question " + i.ToString()) |> ignore
             rockQuestions.AddLast("Rock Question " + i.ToString()) |> ignore
     
-    let nextPlayer currentTurn =
-        match Seq.toList currentTurn.NextPlayers with
-        | nextPlayer::tail -> 
-            state <- Playing { CurrentPlayer = nextPlayer; NextPlayers = Seq.concat [tail;[currentTurn.CurrentPlayer]] }
-        | [] -> failwith "Are you really playing alone ?!"
-    
     member this.isPlayable(): bool =
         this.howManyPlayers() >= 2
 
@@ -123,18 +117,18 @@ type Game() as this =
                     let currentTurn = addOnePurse currentTurn
 
                     let winner = this.didPlayerWin(currentTurn);
-                    nextPlayer currentTurn
+                    state <- nextPlayer currentTurn
 
                     winner;
                 else
-                    nextPlayer currentTurn
+                    state <- nextPlayer currentTurn
                     true;
             else
                 Console.WriteLine("Answer was corrent!!!!");
                 let currentTurn = addOnePurse currentTurn
 
                 let winner = this.didPlayerWin(currentTurn);
-                nextPlayer currentTurn
+                state <- nextPlayer currentTurn
                 
                 winner;
 
@@ -145,11 +139,9 @@ type Game() as this =
                 Console.WriteLine("Question was incorrectly answered");
                 Console.WriteLine(currentTurn.CurrentPlayer.Name + " was sent to the penalty box");
                 let currentTurn = { currentTurn with CurrentPlayer = { currentTurn.CurrentPlayer with InPenaltyBox = true } }
-                state <- Playing currentTurn;
-
-                nextPlayer currentTurn
+                
+                state <- nextPlayer currentTurn
                 true;
-
 
     member private this.didPlayerWin(currentTurn: CurrentTurn): bool =
         not (currentTurn.CurrentPlayer.Purses = 6);

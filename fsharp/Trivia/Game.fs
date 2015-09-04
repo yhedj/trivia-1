@@ -14,3 +14,9 @@ and CurrentTurn = {
     CurrentPlayer: Player
     NextPlayers: Player seq
 }
+    
+let nextPlayer currentTurn =
+    match Seq.toList currentTurn.NextPlayers with
+    | nextPlayer::tail -> 
+        Playing { CurrentPlayer = nextPlayer; NextPlayers = Seq.concat [tail;[currentTurn.CurrentPlayer]] }
+    | [] -> failwith "Are you really playing alone ?!"
