@@ -98,16 +98,6 @@ type Game() as this =
         else "Rock"
 
     member this.wasCorrectlyAnswered(): bool =
-        let addOnePurse currentTurn =
-            let currentPlayer = { currentTurn.CurrentPlayer with Purses = currentTurn.CurrentPlayer.Purses + 1 }
-            let currentTurn = { currentTurn with CurrentPlayer = currentPlayer }
-            state <- Playing currentTurn
-            Console.WriteLine(currentPlayer.Name
-                                + " now has "
-                                + currentPlayer.Purses.ToString()
-                                + " Gold Coins.");
-            currentTurn
-                    
         match state with
         | NotStarted -> failwith "Impossible"
         | Playing currentTurn ->

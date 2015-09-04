@@ -20,3 +20,9 @@ let nextPlayer currentTurn =
     | nextPlayer::tail -> 
         Playing { CurrentPlayer = nextPlayer; NextPlayers = Seq.concat [tail;[currentTurn.CurrentPlayer]] }
     | [] -> failwith "Are you really playing alone ?!"
+
+let addOnePurse currentTurn =
+    let currentPlayer = { currentTurn.CurrentPlayer with Purses = currentTurn.CurrentPlayer.Purses + 1 }
+    let currentTurn = { currentTurn with CurrentPlayer = currentPlayer }
+    printfn "%s now has %i Gold Coins." currentPlayer.Name currentPlayer.Purses
+    currentTurn
