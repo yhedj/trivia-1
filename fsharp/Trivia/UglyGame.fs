@@ -12,8 +12,6 @@ type Game() as this =
     let mutable state = NotStarted
     let players = List<Player>()
     
-    let mutable isGettingOutOfPenaltyBox = false;
-
     let generateQuestions category =
         [1..50] |> Seq.map (fun i -> sprintf "%s Question %i" category i)
 
@@ -31,34 +29,25 @@ type Game() as this =
         players.Count;
 
     member this.roll(roll: int) =
-        let moveAndAskQuestion currentTurn =
-            let player = { currentTurn.CurrentPlayer with Position = (currentTurn.CurrentPlayer.Position + roll) % 12 };
-
-            Console.WriteLine(player.Name
-                                + "'s new location is "
-                                + player.Position.ToString());
-            askQuestion player currentTurn
         let rollFunc currentTurn =
-            Console.WriteLine(currentTurn.CurrentPlayer.Name + " is the current player");
-            Console.WriteLine("They have rolled a " + roll.ToString());
+            printfn "%s is the current player" currentTurn.CurrentPlayer.Name
+            printfn "They have rolled a %i" roll
 
             if currentTurn.CurrentPlayer.InPenaltyBox then
                 if roll % 2 <> 0 then
-                    isGettingOutOfPenaltyBox <- true;
-
                     Console.WriteLine(currentTurn.CurrentPlayer.Name + " is getting out of the penalty box");
-                    moveAndAskQuestion currentTurn
+                    { (moveAndAskQuestion roll currentTurn) with IsGettingOutOfPenaltyBox = true }
                 else
                     Console.WriteLine(currentTurn.CurrentPlayer.Name + " is not getting out of the penalty box");
-                    isGettingOutOfPenaltyBox <- false;
-                    currentTurn
+                    { currentTurn with IsGettingOutOfPenaltyBox = false }
             else
-                moveAndAskQuestion currentTurn
+                moveAndAskQuestion roll currentTurn
 
         match state with
         | NotStarted -> 
             state <- Playing { 
-                CurrentPlayer = players.Item(0)                
+                CurrentPlayer = players.Item(0)       
+                IsGettingOutOfPenaltyBox = false         
                 NextPlayers = Seq.skip 1 players
                 Categories = [ 
                     { Name = "Pop"; Questions = generateQuestions "Pop" }
@@ -74,7 +63,7 @@ type Game() as this =
         | NotStarted -> failwith "Impossible"
         | Playing currentTurn ->
             if currentTurn.CurrentPlayer.InPenaltyBox then
-                if isGettingOutOfPenaltyBox then
+                if currentTurn.IsGettingOutOfPenaltyBox then
                     Console.WriteLine("Answer was correct!!!!");
                     let currentTurn = addOnePurse currentTurn
 

@@ -14,6 +14,7 @@ type GameState =
     | Playing of CurrentTurn
 and CurrentTurn = {
     CurrentPlayer: Player
+    IsGettingOutOfPenaltyBox: bool // Same bug than initial code : a player that has been in penalty box is considered 
     NextPlayers: Player seq
     Categories: Category seq
 }
@@ -34,6 +35,11 @@ let askQuestion player currentTurn =
             Seq.singleton { category with Questions = category.Questions.Skip 1 }
             Seq.skip (categoryIndex + 1) currentTurn.Categories]
     { currentTurn with CurrentPlayer = player; Categories = categoriesWithRemainingQuestions }
+
+let moveAndAskQuestion roll currentTurn =
+    let player = { currentTurn.CurrentPlayer with Position = (currentTurn.CurrentPlayer.Position + roll) % 12 };
+    printfn "%s's new location is %i" player.Name player.Position
+    askQuestion player currentTurn
 
 let nextPlayer currentTurn =
     match Seq.toList currentTurn.NextPlayers with
