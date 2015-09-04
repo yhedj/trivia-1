@@ -40,37 +40,37 @@ type Game() as this =
         players.Count;
 
     member this.roll(roll: int) =
-        let moveAndAskQuestion player =
-            let player = { player with Position = (player.Position + roll) % 12 };
+        let moveAndAskQuestion currentTurn =
+            let player = { currentTurn.CurrentPlayer with Position = (currentTurn.CurrentPlayer.Position + roll) % 12 };
 
             Console.WriteLine(player.Name
                                 + "'s new location is "
                                 + player.Position.ToString());
             Console.WriteLine("The category is " + this.currentCategory(player.Position));
             this.askQuestion(player.Position);
-            player
-        let rollFunc player =
-            Console.WriteLine(player.Name + " is the current player");
+            { currentTurn with CurrentPlayer = player }
+        let rollFunc currentTurn =
+            Console.WriteLine(currentTurn.CurrentPlayer.Name + " is the current player");
             Console.WriteLine("They have rolled a " + roll.ToString());
 
-            if player.InPenaltyBox then
+            if currentTurn.CurrentPlayer.InPenaltyBox then
                 if roll % 2 <> 0 then
                     isGettingOutOfPenaltyBox <- true;
 
-                    Console.WriteLine(player.Name + " is getting out of the penalty box");
-                    moveAndAskQuestion player
+                    Console.WriteLine(currentTurn.CurrentPlayer.Name + " is getting out of the penalty box");
+                    moveAndAskQuestion currentTurn
                 else
-                    Console.WriteLine(player.Name + " is not getting out of the penalty box");
+                    Console.WriteLine(currentTurn.CurrentPlayer.Name + " is not getting out of the penalty box");
                     isGettingOutOfPenaltyBox <- false;
-                    player
+                    currentTurn
             else
-                moveAndAskQuestion player
+                moveAndAskQuestion currentTurn
         match state with
         | NotStarted -> 
             state <- Playing { CurrentPlayer = players.Item(0) ; NextPlayers = Seq.skip 1 players }
             this.roll(roll)
         | Playing currentTurn -> 
-            state <- Playing { currentTurn with CurrentPlayer = rollFunc currentTurn.CurrentPlayer }
+            state <- Playing (rollFunc currentTurn)
 
     member private this.askQuestion(position: int) =
         if this.currentCategory(position) = "Pop" then
