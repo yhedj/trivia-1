@@ -7,26 +7,16 @@ open System.Collections.Generic;
 open System.Linq;
 open System.Text;
 
-type Game() as this =
+type Game(players: Player list) as this =
 
     let mutable state = NotStarted
-    let players = List<Player>()
+    let players = players
     
-    let generateQuestions category =
-        [1..50] |> Seq.map (fun i -> sprintf "%s Question %i" category i)
-
     member this.isPlayable(): bool =
         this.howManyPlayers() >= 2
-
-    member this.add(playerName: String): bool =
-        players.Add({ Name = playerName; Position = 0; Purses = 0; InPenaltyBox = false });
-
-        Console.WriteLine(playerName + " was added");
-        Console.WriteLine("They are player number " + players.Count.ToString());
-        true
-
+        
     member this.howManyPlayers(): int =
-        players.Count;
+        players.Length;
 
     member this.roll(diceValue: int) =
         match state with
@@ -89,11 +79,8 @@ module GameRunner =
     let main argv = 
         let mutable isFirstRound = true;
         let mutable notAWinner = false;
-        let aGame = Game();
-
-        aGame.add("Chet") |> ignore;
-        aGame.add("Pat") |> ignore;
-        aGame.add("Sue") |> ignore;
+        let players = list<Player>.Empty |> addPlayer "Chet" |> addPlayer "Pat" |> addPlayer "Sue"
+        let aGame = Game(players);
         
         let rand = 
             match Array.toList argv with

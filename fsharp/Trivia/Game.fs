@@ -25,6 +25,15 @@ and Category = {
 }
 and Question = string
 
+let generateQuestions category =
+    [1..50] |> Seq.map (fun i -> sprintf "%s Question %i" category i)
+
+let addPlayer playerName players =
+    let players = List.append players [{ Name = playerName; Position = 0; Purses = 0; InPenaltyBox = false }]
+    printfn "%s was added" playerName
+    printfn "They are player number %i" players.Length
+    players
+
 let askQuestion player currentTurn =
     let categoryIndex = player.Position % currentTurn.Categories.Count()
     let category = Seq.nth categoryIndex currentTurn.Categories
