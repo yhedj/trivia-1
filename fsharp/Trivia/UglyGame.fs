@@ -53,21 +53,19 @@ type Game() as this =
                     Console.WriteLine("Answer was correct!!!!");
                     let currentTurn = addOnePurse currentTurn
 
-                    let winner = this.didPlayerWin(currentTurn);
                     state <- nextPlayer currentTurn
 
-                    winner;
+                    not (state = Won currentTurn.CurrentPlayer)
                 else
                     state <- nextPlayer currentTurn
                     true;
             else
                 Console.WriteLine("Answer was corrent!!!!");
                 let currentTurn = addOnePurse currentTurn
-
-                let winner = this.didPlayerWin(currentTurn);
+                
                 state <- nextPlayer currentTurn
                 
-                winner;
+                not (state = Won currentTurn.CurrentPlayer)
 
     member this.wrongAnswer(): bool=
         match state with
@@ -78,10 +76,7 @@ type Game() as this =
                 let currentTurn = { currentTurn with CurrentPlayer = { currentTurn.CurrentPlayer with InPenaltyBox = true } }
                 
                 state <- nextPlayer currentTurn
-                true;
-
-    member private this.didPlayerWin(currentTurn: CurrentTurn): bool =
-        not (currentTurn.CurrentPlayer.Purses = 6);
+                true
 
 module GameRunner = 
     

@@ -12,6 +12,7 @@ type Player = {
 type GameState = 
     | NotStarted
     | Playing of CurrentTurn
+    | Won of Player
 and CurrentTurn = {
     CurrentPlayer: Player
     IsGettingOutOfPenaltyBox: bool // Same bug than initial code : a player that has been in penalty box is considered 
@@ -55,11 +56,18 @@ let roll diceValue currentTurn =
         else
             moveAndAskQuestion diceValue currentTurn
 
+let didPlayerWin player =
+    player.Purses = 6
+
 let nextPlayer currentTurn =
-    match Seq.toList currentTurn.NextPlayers with
-    | nextPlayer::tail -> 
-        Playing { currentTurn with CurrentPlayer = nextPlayer; NextPlayers = Seq.concat [tail;[currentTurn.CurrentPlayer]] }
-    | [] -> failwith "Are you really playing alone ?!"
+    if didPlayerWin currentTurn.CurrentPlayer
+    then 
+        Won currentTurn.CurrentPlayer
+    else
+        match Seq.toList currentTurn.NextPlayers with
+        | nextPlayer::tail -> 
+            Playing { currentTurn with CurrentPlayer = nextPlayer; NextPlayers = Seq.concat [tail;[currentTurn.CurrentPlayer]] }
+        | [] -> failwith "Are you really playing alone ?!"
 
 let addOnePurse currentTurn =
     let currentPlayer = { currentTurn.CurrentPlayer with Purses = currentTurn.CurrentPlayer.Purses + 1 }
