@@ -9,7 +9,6 @@ open System.Text;
 
 type Game(players: Player list) as this =
 
-    let mutable state = NotStarted
     let players = players
     
     member this.isPlayable(): bool =
@@ -18,10 +17,10 @@ type Game(players: Player list) as this =
     member this.howManyPlayers(): int =
         players.Length;
 
-    member this.roll(diceValue: int) =
-        match state with
+    member this.roll(diceValue: int, game) =
+        match game with
         | NotStarted -> 
-            state <- Playing { 
+            let game = Playing { 
                 CurrentPlayer = players.Item(0)       
                 IsGettingOutOfPenaltyBox = false         
                 NextPlayers = Seq.skip 1 players
@@ -30,45 +29,36 @@ type Game(players: Player list) as this =
                     { Name = "Science"; Questions = generateQuestions "Science" }
                     { Name = "Sports"; Questions = generateQuestions "Sports" }
                     { Name = "Rock"; Questions = generateQuestions "Rock" } ] }
-            this.roll(diceValue)
+            this.roll(diceValue, game)
         | Playing currentTurn -> 
-            state <- Playing (roll diceValue currentTurn)
+            Playing (roll diceValue currentTurn)
         | Won player -> failwith "%s already won the game !" player.Name
 
-    member this.wasCorrectlyAnswered(): bool =
-        match state with
+    member this.wasCorrectlyAnswered(game) =
+        match game with
         | NotStarted -> failwith "Impossible"
         | Playing currentTurn ->
             if currentTurn.CurrentPlayer.InPenaltyBox then
                 if currentTurn.IsGettingOutOfPenaltyBox then
                     Console.WriteLine("Answer was correct!!!!");
                     let currentTurn = addOnePurse currentTurn
-
-                    state <- nextPlayer currentTurn
-
-                    not (state = Won currentTurn.CurrentPlayer)
+                    nextPlayer currentTurn
                 else
-                    state <- nextPlayer currentTurn
-                    true;
+                    nextPlayer currentTurn
             else
                 Console.WriteLine("Answer was corrent!!!!");
                 let currentTurn = addOnePurse currentTurn
-                
-                state <- nextPlayer currentTurn
-                
-                not (state = Won currentTurn.CurrentPlayer)
+                nextPlayer currentTurn
         | Won player -> failwith "%s already won the game !" player.Name
 
-    member this.wrongAnswer(): bool=
-        match state with
+    member this.wrongAnswer(game) =
+        match game with
         | NotStarted -> failwith "Impossible"
         | Playing currentTurn ->
             Console.WriteLine("Question was incorrectly answered");
             Console.WriteLine(currentTurn.CurrentPlayer.Name + " was sent to the penalty box");
             let currentTurn = { currentTurn with CurrentPlayer = { currentTurn.CurrentPlayer with InPenaltyBox = true } }
-                
-            state <- nextPlayer currentTurn
-            true
+            nextPlayer currentTurn
         | Won player -> failwith "%s already won the game !" player.Name
 
 module GameRunner = 
@@ -81,6 +71,7 @@ module GameRunner =
         let mutable notAWinner = false;
         let players = list<Player>.Empty |> addPlayer "Chet" |> addPlayer "Pat" |> addPlayer "Sue"
         let aGame = Game(players);
+        let mutable game = NotStarted
         
         let rand = 
             match Array.toList argv with
@@ -90,11 +81,13 @@ module GameRunner =
         while isFirstRound || notAWinner do
             isFirstRound <- false; 
             let randomRoll = rand.Next(5) + 1
-            aGame.roll(randomRoll);
+            game <- aGame.roll(randomRoll, game)
             
             if (rand.Next(9) = 7) then
-                notAWinner <- aGame.wrongAnswer();
+                game <- aGame.wrongAnswer(game)
+                notAWinner <- match game with Won _ -> false | _ -> true
             else
-                notAWinner <- aGame.wasCorrectlyAnswered();
+                game <- aGame.wasCorrectlyAnswered(game)
+                notAWinner <- match game with Won _ -> false | _ -> true
             
         0
