@@ -43,6 +43,7 @@ type Game() as this =
             this.roll(diceValue)
         | Playing currentTurn -> 
             state <- Playing (roll diceValue currentTurn)
+        | Won player -> failwith "%s already won the game !" player.Name
 
     member this.wasCorrectlyAnswered(): bool =
         match state with
@@ -66,17 +67,19 @@ type Game() as this =
                 state <- nextPlayer currentTurn
                 
                 not (state = Won currentTurn.CurrentPlayer)
+        | Won player -> failwith "%s already won the game !" player.Name
 
     member this.wrongAnswer(): bool=
         match state with
-            | NotStarted -> failwith "Impossible"
-            | Playing currentTurn ->
-                Console.WriteLine("Question was incorrectly answered");
-                Console.WriteLine(currentTurn.CurrentPlayer.Name + " was sent to the penalty box");
-                let currentTurn = { currentTurn with CurrentPlayer = { currentTurn.CurrentPlayer with InPenaltyBox = true } }
+        | NotStarted -> failwith "Impossible"
+        | Playing currentTurn ->
+            Console.WriteLine("Question was incorrectly answered");
+            Console.WriteLine(currentTurn.CurrentPlayer.Name + " was sent to the penalty box");
+            let currentTurn = { currentTurn with CurrentPlayer = { currentTurn.CurrentPlayer with InPenaltyBox = true } }
                 
-                state <- nextPlayer currentTurn
-                true
+            state <- nextPlayer currentTurn
+            true
+        | Won player -> failwith "%s already won the game !" player.Name
 
 module GameRunner = 
     
