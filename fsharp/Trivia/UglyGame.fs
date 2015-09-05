@@ -28,21 +28,7 @@ type Game() as this =
     member this.howManyPlayers(): int =
         players.Count;
 
-    member this.roll(roll: int) =
-        let rollFunc currentTurn =
-            printfn "%s is the current player" currentTurn.CurrentPlayer.Name
-            printfn "They have rolled a %i" roll
-
-            if currentTurn.CurrentPlayer.InPenaltyBox then
-                if roll % 2 <> 0 then
-                    Console.WriteLine(currentTurn.CurrentPlayer.Name + " is getting out of the penalty box");
-                    { (moveAndAskQuestion roll currentTurn) with IsGettingOutOfPenaltyBox = true }
-                else
-                    Console.WriteLine(currentTurn.CurrentPlayer.Name + " is not getting out of the penalty box");
-                    { currentTurn with IsGettingOutOfPenaltyBox = false }
-            else
-                moveAndAskQuestion roll currentTurn
-
+    member this.roll(diceValue: int) =
         match state with
         | NotStarted -> 
             state <- Playing { 
@@ -54,9 +40,9 @@ type Game() as this =
                     { Name = "Science"; Questions = generateQuestions "Science" }
                     { Name = "Sports"; Questions = generateQuestions "Sports" }
                     { Name = "Rock"; Questions = generateQuestions "Rock" } ] }
-            this.roll(roll)
+            this.roll(diceValue)
         | Playing currentTurn -> 
-            state <- Playing (rollFunc currentTurn)
+            state <- Playing (roll diceValue currentTurn)
 
     member this.wasCorrectlyAnswered(): bool =
         match state with

@@ -23,7 +23,7 @@ and Category = {
     Questions: Question seq
 }
 and Question = string
-    
+
 let askQuestion player currentTurn =
     let categoryIndex = player.Position % currentTurn.Categories.Count()
     let category = Seq.nth categoryIndex currentTurn.Categories
@@ -40,6 +40,20 @@ let moveAndAskQuestion roll currentTurn =
     let player = { currentTurn.CurrentPlayer with Position = (currentTurn.CurrentPlayer.Position + roll) % 12 };
     printfn "%s's new location is %i" player.Name player.Position
     askQuestion player currentTurn
+    
+let roll diceValue currentTurn =
+        printfn "%s is the current player" currentTurn.CurrentPlayer.Name
+        printfn "They have rolled a %i" diceValue
+
+        if currentTurn.CurrentPlayer.InPenaltyBox then
+            if diceValue % 2 <> 0 then
+                printfn "%s is getting out of the penalty box" currentTurn.CurrentPlayer.Name
+                { (moveAndAskQuestion diceValue currentTurn) with IsGettingOutOfPenaltyBox = true }
+            else
+                printfn "%s is not getting out of the penalty box" currentTurn.CurrentPlayer.Name
+                { currentTurn with IsGettingOutOfPenaltyBox = false }
+        else
+            moveAndAskQuestion diceValue currentTurn
 
 let nextPlayer currentTurn =
     match Seq.toList currentTurn.NextPlayers with
