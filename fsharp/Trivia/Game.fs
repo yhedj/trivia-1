@@ -35,7 +35,7 @@ let addPlayer playerName players =
 
 let askQuestion player currentTurn =
     let categoryIndex = player.Position % currentTurn.Categories.Count()
-    let category = Seq.nth categoryIndex currentTurn.Categories
+    let category = Seq.item categoryIndex currentTurn.Categories
     printfn "The category is %s" category.Name;
     printfn "%s" (category.Questions.First())
     let categoriesWithRemainingQuestions = 
