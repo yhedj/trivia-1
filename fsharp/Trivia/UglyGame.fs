@@ -19,24 +19,12 @@ type Game(players: Player list) as this =
 
     member this.roll(diceValue: int, game) =
         match game with
-        | NotStarted -> 
-            let game = Playing { 
-                CurrentPlayer = players.Item(0)       
-                IsGettingOutOfPenaltyBox = false         
-                NextPlayers = Seq.skip 1 players
-                Categories = [ 
-                    { Name = "Pop"; Questions = generateQuestions "Pop" }
-                    { Name = "Science"; Questions = generateQuestions "Science" }
-                    { Name = "Sports"; Questions = generateQuestions "Sports" }
-                    { Name = "Rock"; Questions = generateQuestions "Rock" } ] }
-            this.roll(diceValue, game)
         | Playing currentTurn -> 
             Playing (roll diceValue currentTurn)
         | Won player -> failwith "%s already won the game !" player.Name
 
     member this.wasCorrectlyAnswered(game) =
         match game with
-        | NotStarted -> failwith "Impossible"
         | Playing currentTurn ->
             if currentTurn.CurrentPlayer.InPenaltyBox then
                 if currentTurn.IsGettingOutOfPenaltyBox then
@@ -53,7 +41,6 @@ type Game(players: Player list) as this =
 
     member this.wrongAnswer(game) =
         match game with
-        | NotStarted -> failwith "Impossible"
         | Playing currentTurn ->
             Console.WriteLine("Question was incorrectly answered");
             Console.WriteLine(currentTurn.CurrentPlayer.Name + " was sent to the penalty box");
@@ -71,7 +58,15 @@ module GameRunner =
         let mutable notAWinner = false;
         let players = list<Player>.Empty |> addPlayer "Chet" |> addPlayer "Pat" |> addPlayer "Sue"
         let aGame = Game(players);
-        let mutable game = NotStarted
+        let mutable game = Playing { 
+                CurrentPlayer = players.Item(0)       
+                IsGettingOutOfPenaltyBox = false         
+                NextPlayers = Seq.skip 1 players
+                Categories = [ 
+                    { Name = "Pop"; Questions = generateQuestions "Pop" }
+                    { Name = "Science"; Questions = generateQuestions "Science" }
+                    { Name = "Sports"; Questions = generateQuestions "Sports" }
+                    { Name = "Rock"; Questions = generateQuestions "Rock" } ] }
         
         let rand = 
             match Array.toList argv with

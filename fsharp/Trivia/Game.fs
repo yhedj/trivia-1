@@ -10,7 +10,6 @@ type Player = {
 }
 
 type GameState = 
-    | NotStarted
     | Playing of CurrentTurn
     | Won of Player
 and CurrentTurn = {
