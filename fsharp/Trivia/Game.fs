@@ -51,18 +51,18 @@ let moveAndAskQuestion roll currentTurn =
     askQuestion player currentTurn
     
 let roll diceValue currentTurn =
-        printfn "%s is the current player" currentTurn.CurrentPlayer.Name
-        printfn "They have rolled a %i" diceValue
+    printfn "%s is the current player" currentTurn.CurrentPlayer.Name
+    printfn "They have rolled a %i" diceValue
 
-        if currentTurn.CurrentPlayer.InPenaltyBox then
-            if diceValue % 2 <> 0 then
-                printfn "%s is getting out of the penalty box" currentTurn.CurrentPlayer.Name
-                { (moveAndAskQuestion diceValue currentTurn) with IsGettingOutOfPenaltyBox = true }
-            else
-                printfn "%s is not getting out of the penalty box" currentTurn.CurrentPlayer.Name
-                { currentTurn with IsGettingOutOfPenaltyBox = false }
+    if currentTurn.CurrentPlayer.InPenaltyBox then
+        if diceValue % 2 <> 0 then
+            printfn "%s is getting out of the penalty box" currentTurn.CurrentPlayer.Name
+            { (moveAndAskQuestion diceValue currentTurn) with IsGettingOutOfPenaltyBox = true }
         else
-            moveAndAskQuestion diceValue currentTurn
+            printfn "%s is not getting out of the penalty box" currentTurn.CurrentPlayer.Name
+            { currentTurn with IsGettingOutOfPenaltyBox = false }
+    else
+        moveAndAskQuestion diceValue currentTurn
 
 let didPlayerWin player =
     player.Purses = 6
@@ -82,3 +82,36 @@ let addOnePurse currentTurn =
     let currentTurn = { currentTurn with CurrentPlayer = currentPlayer }
     printfn "%s now has %i Gold Coins." currentPlayer.Name currentPlayer.Purses
     currentTurn
+
+let wrongAnswer currentTurn =
+    printfn "Question was incorrectly answered"
+    printfn "%s was sent to the penalty box" currentTurn.CurrentPlayer.Name
+    let currentTurn = { currentTurn with CurrentPlayer = { currentTurn.CurrentPlayer with InPenaltyBox = true } }
+    nextPlayer currentTurn
+
+let goodAnswer currentTurn =
+    if currentTurn.CurrentPlayer.InPenaltyBox then
+        if currentTurn.IsGettingOutOfPenaltyBox then
+            printfn "Answer was correct!!!!"
+            let currentTurn = addOnePurse currentTurn
+            nextPlayer currentTurn
+        else
+            nextPlayer currentTurn
+    else
+        printfn "Answer was corrent!!!!"
+        let currentTurn = addOnePurse currentTurn
+        nextPlayer currentTurn
+
+open System
+
+let rec play (random:Random) game =
+    match game with
+    | Playing currentTurn -> 
+        let randomRoll = random.Next(5) + 1
+        let turn = roll randomRoll currentTurn
+        if (random.Next(9) = 7) then
+            play random (wrongAnswer turn)
+        else
+            play random (goodAnswer turn)
+    | Won player -> ()
+    

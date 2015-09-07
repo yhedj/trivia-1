@@ -17,12 +17,6 @@ type Game(players: Player list) as this =
     member this.howManyPlayers(): int =
         players.Length;
 
-    member this.roll(diceValue: int, game) =
-        match game with
-        | Playing currentTurn -> 
-            Playing (roll diceValue currentTurn)
-        | Won player -> failwith "%s already won the game !" player.Name
-
     member this.wasCorrectlyAnswered(game) =
         match game with
         | Playing currentTurn ->
@@ -72,17 +66,6 @@ module GameRunner =
             match Array.toList argv with
             | seed::tail -> new Random(int seed)
             | _ -> new Random()
-
-        while isFirstRound || notAWinner do
-            isFirstRound <- false; 
-            let randomRoll = rand.Next(5) + 1
-            game <- aGame.roll(randomRoll, game)
             
-            if (rand.Next(9) = 7) then
-                game <- aGame.wrongAnswer(game)
-                notAWinner <- match game with Won _ -> false | _ -> true
-            else
-                game <- aGame.wasCorrectlyAnswered(game)
-                notAWinner <- match game with Won _ -> false | _ -> true
-            
+        play rand game            
         0
