@@ -1,3 +1,9 @@
 bin/
 obj/
 *.user
+*.suo
+packages/
+.paket/
+.vs/
+.fake/
+build/
