@@ -162,7 +162,7 @@ type Game() as this =
 
 module GameRunner = 
     [<EntryPoint>]
-    let main argv = 
+    let main (argv : string array) = 
         let mutable isFirstRound = true;
         let mutable notAWinner = false;
         let aGame = Game();
@@ -171,7 +171,7 @@ module GameRunner =
         aGame.add("Pat") |> ignore;
         aGame.add("Sue") |> ignore;
 
-        let rand = new Random();
+        let rand = new Random(argv.[0] |> int);
 
         while isFirstRound || notAWinner do
             isFirstRound <- false; 

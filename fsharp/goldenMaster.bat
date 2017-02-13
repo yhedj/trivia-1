@@ -1,0 +1,1 @@
+Trivia\bin\Debug\Trivia.exe %1 > goldenmaster.txt
