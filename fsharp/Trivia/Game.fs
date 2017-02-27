@@ -41,9 +41,6 @@ type Game() as this =
         places.[this.howManyPlayers()] <- 0;
         purses.[this.howManyPlayers()] <- 0;
         inPenaltyBox.[this.howManyPlayers()] <- false;
-
-        Console.WriteLine(playerName + " was added");
-        Console.WriteLine("They are player number " + players.Count.ToString());
         true
 
     member this.howManyPlayers(): int =
@@ -159,27 +156,72 @@ type Game() as this =
     member private this.didPlayerWin(): bool =
         not (purses.[currentPlayer] = 6);
 
+module NewGame =
+    type Player = {
+        Name: string
+    }
+    type RunningGame = {
+        Players: Player list
+        CurrentPlayer: Player
+    }
+    type GameState = NewGame | RunningGame of RunningGame | PlayerWon of Player
+
+    let addPlayer name (oldGame: Game) game =
+        let newPlayer = { Name = name }
+        let runningGame = 
+            match game with
+            | NewGame -> { Players = [ newPlayer ]; CurrentPlayer = newPlayer }
+            | RunningGame old -> { old with Players = List.append old.Players [{ Name = name }] }
+            | PlayerWon _ -> failwith "Impossible to play a won game!!"
+        oldGame.add(name) |> ignore
+        printfn "%s was added" name
+        printfn "They are player number %i" (runningGame.Players.Count())
+        RunningGame runningGame
+
+    let roll diceValue (oldGame: Game) game =
+        oldGame.roll diceValue
+        game
+
+    let answerIncorrectly (oldGame: Game) game =
+        oldGame.wrongAnswer() |> ignore
+        RunningGame game
+
+    let answerCorrectly (oldGame: Game) game =
+        if oldGame.wasCorrectlyAnswered() then
+            RunningGame game
+        else
+            PlayerWon game.CurrentPlayer
 
 module GameRunner = 
+    open NewGame
+
     [<EntryPoint>]
     let main (argv : string array) = 
         let mutable isFirstRound = true;
         let mutable notAWinner = false;
         let aGame = Game();
-
-        aGame.add("Chet") |> ignore;
-        aGame.add("Pat") |> ignore;
-        aGame.add("Sue") |> ignore;
+        let game = 
+            NewGame
+            |> addPlayer "Chet" aGame
+            |> addPlayer "Pat" aGame
+            |> addPlayer "Sue" aGame
 
         let rand = new Random(argv.[0] |> int);
 
-        while isFirstRound || notAWinner do
-            isFirstRound <- false; 
-            aGame.roll(rand.Next(5) + 1);
+        let rec play (runningGame : RunningGame) =
+            let pendingAnswer = runningGame |> roll (rand.Next(5) + 1) aGame
+            let newState = 
+                if (rand.Next(9) = 7) then
+                    pendingAnswer |> answerIncorrectly aGame
+                else
+                    pendingAnswer |> answerCorrectly aGame
+            match newState with
+            | NewGame -> failwith "Impossible to play a game not started..."
+            | RunningGame runningGame -> play runningGame
+            | PlayerWon _ -> ()
 
-            if (rand.Next(9) = 7) then
-                notAWinner <- aGame.wrongAnswer();
-            else
-                notAWinner <- aGame.wasCorrectlyAnswered();
-
+        match game with
+        | NewGame -> failwith "Impossible to play a game not started..."
+        | RunningGame runningGame -> play runningGame
+        | PlayerWon _ -> failwith "Impossible to play a won game!"
         0
