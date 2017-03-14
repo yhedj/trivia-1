@@ -1,4 +1,6 @@
-Code smells:
+# Session #0
+
+## Code smells
 
 * aGame.add : 
     * liste ?
@@ -8,3 +10,15 @@ Code smells:
 * boucle while
 * Game orienté objet
 * Primitive obsession
+
+## Golden master
+
+# Refactoring session #1
+
+* New module where we introduce "pure" functions and types, calling legacy code to keep golden master.
+* Remove while -> recursive function instead
+
+# Refactoring session #2
+
+* Refactor legacy code : extract method (winAPurse & nextPlayer)
+* 

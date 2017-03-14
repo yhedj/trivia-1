@@ -21,6 +21,18 @@ type Game() as this =
     let rockQuestions = LinkedList<string>()
 
     let mutable currentPlayer = 0;
+
+    let nextPlayer () =
+            currentPlayer <- currentPlayer + 1;
+                if currentPlayer = players.Count then currentPlayer <- 0;
+
+    let winAPurse () =
+        purses.[currentPlayer] <- purses.[currentPlayer] + 1;
+        Console.WriteLine(players.[currentPlayer]
+                            + " now has "
+                            + purses.[currentPlayer].ToString()
+                            + " Gold Coins.");
+        
     let mutable isGettingOutOfPenaltyBox = false;
 
     do
@@ -108,39 +120,27 @@ type Game() as this =
         elif (places.[currentPlayer] = 6) then "Sports";
         elif (places.[currentPlayer] = 10) then "Sports";
         else "Rock"
-
+        
     member this.wasCorrectlyAnswered(): bool =
+               
         if inPenaltyBox.[currentPlayer] then
             if isGettingOutOfPenaltyBox then
                 Console.WriteLine("Answer was correct!!!!");
-                purses.[currentPlayer] <- purses.[currentPlayer] + 1;
-                Console.WriteLine(players.[currentPlayer]
-                                    + " now has "
-                                    + purses.[currentPlayer].ToString()
-                                    + " Gold Coins.");
+                winAPurse ()
 
                 let winner = this.didPlayerWin();
-                currentPlayer <- currentPlayer + 1;
-                if currentPlayer = players.Count then currentPlayer <- 0;
-                
+                nextPlayer()
                 winner;
             else
-                currentPlayer <- currentPlayer + 1;
-                if currentPlayer = players.Count then currentPlayer <- 0;
+                nextPlayer()
                 true;
         else
 
             Console.WriteLine("Answer was corrent!!!!");
-            purses.[currentPlayer] <- purses.[currentPlayer] + 1;
-            Console.WriteLine(players.[currentPlayer]
-                                + " now has "
-                                + purses.[currentPlayer].ToString()
-                                + " Gold Coins.");
+            winAPurse()
 
             let winner = this.didPlayerWin();
-            currentPlayer <- currentPlayer + 1;
-            if (currentPlayer = players.Count) then currentPlayer <- 0;
-
+            nextPlayer()
             winner;
 
     member this.wrongAnswer(): bool=
@@ -148,8 +148,7 @@ type Game() as this =
         Console.WriteLine(players.[currentPlayer] + " was sent to the penalty box");
         inPenaltyBox.[currentPlayer] <- true;
 
-        currentPlayer <- currentPlayer + 1;
-        if (currentPlayer = players.Count) then currentPlayer <- 0;
+        nextPlayer()
         true;
 
 
