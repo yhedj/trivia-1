@@ -20,5 +20,5 @@
 
 # Refactoring session #2
 
-* Refactor legacy code : extract method (winAPurse & nextPlayer)
-* 
+* Extract method (winAPurse, nextPlayer, movePlayer)
+* Replace lots of "if" by pattern matching (& modulo)

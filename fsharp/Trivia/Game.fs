@@ -32,7 +32,15 @@ type Game() as this =
                             + " now has "
                             + purses.[currentPlayer].ToString()
                             + " Gold Coins.");
-        
+    
+    let movePlayer roll =
+        places.[currentPlayer] <- places.[currentPlayer] + roll;
+        if places.[currentPlayer] > 11 then places.[currentPlayer] <- places.[currentPlayer] - 12;
+
+        Console.WriteLine(players.[currentPlayer]
+                            + "'s new location is "
+                            + places.[currentPlayer].ToString());
+        Console.WriteLine("The category is " + this.currentCategory());
     let mutable isGettingOutOfPenaltyBox = false;
 
     do
@@ -67,13 +75,7 @@ type Game() as this =
                 isGettingOutOfPenaltyBox <- true;
 
                 Console.WriteLine(players.[currentPlayer].ToString() + " is getting out of the penalty box");
-                places.[currentPlayer] <- places.[currentPlayer] + roll;
-                if places.[currentPlayer] > 11 then places.[currentPlayer] <- places.[currentPlayer] - 12;
-
-                Console.WriteLine(players.[currentPlayer]
-                                    + "'s new location is "
-                                    + places.[currentPlayer].ToString());
-                Console.WriteLine("The category is " + this.currentCategory());
+                movePlayer roll
                 this.askQuestion();
                
             else
@@ -81,13 +83,7 @@ type Game() as this =
                 isGettingOutOfPenaltyBox <- false;
 
         else
-            places.[currentPlayer] <- places.[currentPlayer] + roll;
-            if places.[currentPlayer] > 11 then places.[currentPlayer] <- places.[currentPlayer] - 12;
-
-            Console.WriteLine(players.[currentPlayer]
-                                + "'s new location is "
-                                + places.[currentPlayer].ToString());
-            Console.WriteLine("The category is " + this.currentCategory());
+            movePlayer roll
             this.askQuestion();
 
     member private this.askQuestion() =
@@ -109,18 +105,11 @@ type Game() as this =
 
 
     member private this.currentCategory(): String =
-
-        if (places.[currentPlayer] = 0) then "Pop";
-        elif (places.[currentPlayer] = 4) then "Pop";
-        elif (places.[currentPlayer] = 8) then "Pop";
-        elif (places.[currentPlayer] = 1) then "Science";
-        elif (places.[currentPlayer] = 5) then "Science";
-        elif (places.[currentPlayer] = 9) then "Science";
-        elif (places.[currentPlayer] = 2) then "Sports";
-        elif (places.[currentPlayer] = 6) then "Sports";
-        elif (places.[currentPlayer] = 10) then "Sports";
-        else "Rock"
-        
+        match places.[currentPlayer] % 4 with
+        | 0 -> "Pop"
+        | 1 -> "Science"
+        | 2 -> "Sports"
+        | _ -> "Rock"        
     member this.wasCorrectlyAnswered(): bool =
                
         if inPenaltyBox.[currentPlayer] then
