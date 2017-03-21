@@ -66,7 +66,7 @@ type Game() as this =
     member this.howManyPlayers(): int =
         players.Count;
 
-    member this.roll(roll: int) =
+    member this.roll (roll: int) currentPlayer =
         Console.WriteLine(players.[currentPlayer] + " is the current player");
         Console.WriteLine("They have rolled a " + roll.ToString());
 
@@ -166,9 +166,17 @@ module NewGame =
         printfn "They are player number %i" (runningGame.Players.Count())
         RunningGame runningGame
 
+    let private nextPlayer players currentIndex =
+        let nextIndex = 
+            if currentIndex + 1 < List.length players 
+            then currentIndex + 1 
+            else 0
+        List.nth players nextIndex
+
     let roll diceValue (oldGame: Game) game =
-        oldGame.roll diceValue
-        game
+        let currentPlayerIndex = game.Players |> List.findIndex (fun x -> x = game.CurrentPlayer)
+        oldGame.roll diceValue currentPlayerIndex
+        { game with CurrentPlayer = (nextPlayer game.Players currentPlayerIndex) }
 
     let answerIncorrectly (oldGame: Game) game =
         oldGame.wrongAnswer() |> ignore
