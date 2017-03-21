@@ -25,3 +25,5 @@ Goal : reduce impact of current player to remove mutable member
 * Extract method (winAPurse, nextPlayer, movePlayer)
 * Replace lots of "if" by pattern matching (& modulo)
 * Replace use of mutable current player with CurrentPlayer in GameState
+    * In roll
+    * In wrongAnswer and correctlyAnswered

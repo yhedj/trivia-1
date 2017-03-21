@@ -66,20 +66,20 @@ type Game() as this =
     member this.howManyPlayers(): int =
         players.Count;
 
-    member this.roll (roll: int) currentPlayer =
-        Console.WriteLine(players.[currentPlayer] + " is the current player");
+    member this.roll (roll: int) currentPlayerIndex =
+        Console.WriteLine(players.[currentPlayerIndex] + " is the current player");
         Console.WriteLine("They have rolled a " + roll.ToString());
 
-        if inPenaltyBox.[currentPlayer] then
+        if inPenaltyBox.[currentPlayerIndex] then
             if roll % 2 <> 0 then
                 isGettingOutOfPenaltyBox <- true;
 
-                Console.WriteLine(players.[currentPlayer].ToString() + " is getting out of the penalty box");
+                Console.WriteLine(players.[currentPlayerIndex].ToString() + " is getting out of the penalty box");
                 movePlayer roll
                 this.askQuestion();
                
             else
-                Console.WriteLine(players.[currentPlayer].ToString() + " is not getting out of the penalty box");
+                Console.WriteLine(players.[currentPlayerIndex].ToString() + " is not getting out of the penalty box");
                 isGettingOutOfPenaltyBox <- false;
 
         else
@@ -110,9 +110,9 @@ type Game() as this =
         | 1 -> "Science"
         | 2 -> "Sports"
         | _ -> "Rock"        
-    member this.wasCorrectlyAnswered(): bool =
+    member this.wasCorrectlyAnswered currentPlayerIndex =
                
-        if inPenaltyBox.[currentPlayer] then
+        if inPenaltyBox.[currentPlayerIndex] then
             if isGettingOutOfPenaltyBox then
                 Console.WriteLine("Answer was correct!!!!");
                 winAPurse ()
@@ -132,10 +132,10 @@ type Game() as this =
             nextPlayer()
             winner;
 
-    member this.wrongAnswer(): bool=
+    member this.wrongAnswer currentPlayerIndex =
         Console.WriteLine("Question was incorrectly answered");
-        Console.WriteLine(players.[currentPlayer] + " was sent to the penalty box");
-        inPenaltyBox.[currentPlayer] <- true;
+        Console.WriteLine(players.[currentPlayerIndex] + " was sent to the penalty box");
+        inPenaltyBox.[currentPlayerIndex] <- true;
 
         nextPlayer()
         true;
@@ -173,18 +173,23 @@ module NewGame =
             else 0
         List.nth players nextIndex
 
+    let private getCurrentPlayerIndex game = 
+        game.Players |> List.findIndex (fun x -> x = game.CurrentPlayer)
+
     let roll diceValue (oldGame: Game) game =
-        let currentPlayerIndex = game.Players |> List.findIndex (fun x -> x = game.CurrentPlayer)
+        let currentPlayerIndex = getCurrentPlayerIndex game
         oldGame.roll diceValue currentPlayerIndex
-        { game with CurrentPlayer = (nextPlayer game.Players currentPlayerIndex) }
+        game
 
     let answerIncorrectly (oldGame: Game) game =
-        oldGame.wrongAnswer() |> ignore
-        RunningGame game
+        let currentPlayerIndex = getCurrentPlayerIndex game
+        oldGame.wrongAnswer currentPlayerIndex |> ignore        
+        { game with CurrentPlayer = (nextPlayer game.Players currentPlayerIndex) } |> RunningGame
 
     let answerCorrectly (oldGame: Game) game =
-        if oldGame.wasCorrectlyAnswered() then
-            RunningGame game
+        let currentPlayerIndex = getCurrentPlayerIndex game
+        if oldGame.wasCorrectlyAnswered currentPlayerIndex then
+            { game with CurrentPlayer = (nextPlayer game.Players currentPlayerIndex) } |> RunningGame
         else
             PlayerWon game.CurrentPlayer
 
