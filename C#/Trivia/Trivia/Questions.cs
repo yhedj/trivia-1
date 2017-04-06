@@ -14,6 +14,7 @@ namespace Trivia
         LinkedList<String> rockQuestions = new LinkedList<string>();
 
         private readonly Dictionary<int, string> _categories = new Dictionary<int, string>() { { 0, "Pop" }, { 1, "Science" }, { 2, "Sports" }, { 3, "Rock" } };
+        
         private object _players;
 
         public void AddLast(string s)
@@ -24,24 +25,28 @@ namespace Trivia
         {
             if (CurrentCategory(CurrentPlayer) == "Pop")
             {
-                popQuestions.AskQuestion();
+                Console.WriteLine(popQuestions.First());
+                popQuestions.RemoveFirst();
             }
             if (CurrentCategory(CurrentPlayer) == "Science")
             {
-                scienceQuestions.AskQuestion();
+                Console.WriteLine(scienceQuestions.First());
+                scienceQuestions.RemoveFirst();
             }
             if (CurrentCategory(CurrentPlayer) == "Sports")
             {
-                sportsQuestions.AskQuestion();
+                Console.WriteLine(sportsQuestions.First());
+                sportsQuestions.RemoveFirst();
             }
             if (CurrentCategory(CurrentPlayer) == "Rock")
             {
-                rockQuestions.AskQuestion();
+                Console.WriteLine(rockQuestions.First());
+                rockQuestions.RemoveFirst();
             }
         }
         private string CurrentCategory(int currentPlayer)
         {
-            return _categories[_players.Current.Place % 4];
+            return _categories[currentPlayer % 4];
         }
 
     }
