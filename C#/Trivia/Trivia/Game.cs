@@ -6,8 +6,9 @@ namespace Trivia
 {
     public class Game
     {
-        private readonly Dictionary<int, string> _categories = new Dictionary<int, string>() {{0, "Pop"}, {1, "Science"}, {2, "Sports"}, {3, "Rock"}};
 
+        private readonly Questions Questions = new Questions();
+        
         private readonly Players _players;
 
         Questions popQuestions = new Questions();
@@ -75,33 +76,9 @@ namespace Trivia
 
         }
 
-        private void AskQuestion()
-        {
-            if (CurrentCategory() == "Pop")
-            {
-                popQuestions.AskQuestion();
-            }
-            if (CurrentCategory() == "Science")
-            {
-                scienceQuestions.AskQuestion();
+        
 
-            }
-            if (CurrentCategory() == "Sports")
-            {
-                sportsQuestions.AskQuestion();
-            }
-            if (CurrentCategory() == "Rock")
-            {
-                rockQuestions.AskQuestion();
-            }
-        }
-
-
-        private string CurrentCategory()
-        {
-            return _categories[_players.Current.Place % 4];
-        }
-
+      
         public bool WasCorrectlyAnswered()
         {
             bool winner;
