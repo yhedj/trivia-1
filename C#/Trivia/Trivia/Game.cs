@@ -10,10 +10,10 @@ namespace Trivia
 
         private readonly Players _players;
 
-        LinkedList<string> popQuestions = new LinkedList<string>();
-        LinkedList<string> scienceQuestions = new LinkedList<string>();
-        LinkedList<string> sportsQuestions = new LinkedList<string>();
-        LinkedList<string> rockQuestions = new LinkedList<string>();
+        Questions popQuestions = new Questions();
+        Questions scienceQuestions = new Questions();
+        Questions sportsQuestions = new Questions();
+        Questions rockQuestions = new Questions();
 
         bool isGettingOutOfPenaltyBox;
 
@@ -79,6 +79,7 @@ namespace Trivia
         {
             if (CurrentCategory() == "Pop")
             {
+
                 Console.WriteLine(popQuestions.First());
                 popQuestions.RemoveFirst();
             }
