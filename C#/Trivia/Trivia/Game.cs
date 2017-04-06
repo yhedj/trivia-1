@@ -79,24 +79,20 @@ namespace Trivia
         {
             if (CurrentCategory() == "Pop")
             {
-
-                Console.WriteLine(popQuestions.First());
-                popQuestions.RemoveFirst();
+                popQuestions.AskQuestion();
             }
             if (CurrentCategory() == "Science")
             {
-                Console.WriteLine(scienceQuestions.First());
-                scienceQuestions.RemoveFirst();
+                scienceQuestions.AskQuestion();
+
             }
             if (CurrentCategory() == "Sports")
             {
-                Console.WriteLine(sportsQuestions.First());
-                sportsQuestions.RemoveFirst();
+                sportsQuestions.AskQuestion();
             }
             if (CurrentCategory() == "Rock")
             {
-                Console.WriteLine(rockQuestions.First());
-                rockQuestions.RemoveFirst();
+                rockQuestions.AskQuestion();
             }
         }
 
